@@ -1,0 +1,9 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://192.168.10.247:8080
+functions:
+  streaming:
+    lang: python3-debian
+    handler: ./streaming
+    image: gustavoasc/streaming:latest
