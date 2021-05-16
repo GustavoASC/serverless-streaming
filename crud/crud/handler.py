@@ -1,4 +1,3 @@
-import sys
 import os
 import json
 import base64
@@ -24,7 +23,6 @@ DB_HOST_PORT = '192.168.0.110:27017'
 # --------------------------------------------------------------
 # Database methods
 # --------------------------------------------------------------
-
 
 def db_get_uri():
     host = DB_HOST_PORT
@@ -52,7 +50,7 @@ def crud_music_to_dict(db_music):
         "id": str(db_music[u'_id']),
         "name": db_music[u'name'],
         "author": db_music[u'author'],
-        "song_base64": db_music[u'song_base64']
+        # "song_base64": db_music[u'song_base64']
     }
     return res
 
@@ -93,7 +91,6 @@ def crud_delete(id):
 # Utilities
 # --------------------------------------------------------------
 
-
 def util_parse_query_params():
     query_string_env = os.getenv('Http_Query')
     query_parsed = parse_qsl(query_string_env)
@@ -129,7 +126,6 @@ def http_delete(req):
 # Function handler
 # --------------------------------------------------------------
 
-
 def handle(req):
     """handle a request to the function
     Args:
@@ -156,35 +152,23 @@ if __name__ == "__main__":
     # --------------
     # Requisição GET
     # --------------
-    os.environ["Http_Method"] = "GET"
-    os.environ["Http_Query"] = "id=60a11922c56144cd7d5b0d75"
-    res = handle("")
-    res = json.loads(res)
-    # print(res)
+    # os.environ["Http_Method"] = "GET"
+    # os.environ["Http_Query"] = "id=60a11922c56144cd7d5b0d75"
+    # res = handle("")
+    # res = json.loads(res)
+    # # print(res)
 
-    from pydub import AudioSegment
-    from pydub.playback import play
-    import io
+    # from pydub import AudioSegment
+    # from pydub.playback import play
+    # import io
 
-    if "song_base64" in res:
-        base64_string = res["song_base64"]
-        base64_bytes = base64_string.encode("ascii")
-
-        sample_string_bytes = base64.b64decode(base64_bytes)
-        # sample_string = sample_string_bytes.decode("ascii")
-
-        # # data = open('/home/gustavo/Downloads/file_example_MP3_700KB.mp3', 'rb').read()
-        bytesio = io.BytesIO(sample_string_bytes)
-
-        song = AudioSegment.from_mp3(bytesio)
-
-        length = len(song)
-
-
-        halfway_point = len(song) / 2
-        song = song[halfway_point:]
-
-        play(song)
+    # if "song_base64" in res:
+    #     base64_string = res["song_base64"]
+    #     base64_bytes = base64_string.encode("ascii")
+    #     sample_string_bytes = base64.b64decode(base64_bytes)
+    #     bytesio = io.BytesIO(sample_string_bytes)
+    #     song = AudioSegment.from_mp3(bytesio)
+    #     play(song)3
 
 
 
@@ -193,12 +177,12 @@ if __name__ == "__main__":
     # --------------
     # Requisição POST
     # --------------
-    # os.environ["Http_Method"] = "POST"
-    # bin_content = open('/home/gustavo/Downloads/teste.mp3', 'rb').read()
-    # base64_bytes = base64.b64encode(bin_content)
-    # base64_string = base64_bytes.decode("ascii")
-    # req = '{"name":"Outro", "author":"Erasure", "song_base64": "' + base64_string + '"}'
+    os.environ["Http_Method"] = "POST"
+    bin_content = open('/home/gustavo/Downloads/teste.mp3', 'rb').read()
+    base64_bytes = base64.b64encode(bin_content)
+    base64_string = base64_bytes.decode("ascii")
+    req = '{"name":"Outro", "author":"Erasure", "song_base64": "' + base64_string + '"}'
 
-    # res = handle(req)
-    # print(res)
+    res = handle(req)
+    print(res)
 
