@@ -1,10 +1,18 @@
-import wave
+import wave, os, requests
 
 CHUNK = 1024
 
-def handle(audio_name):
 
-    wf = wave.open(audio_name.strip(), 'rb')
+def handle(req):
+    """handle a request to the function
+    Args:
+        req (str): request body
+    """
+
+    gateway_hostname = os.getenv("gateway_hostname", "gateway")
+    r = requests.get("http://" + gateway_hostname + ":8080/function/sentimentanalysis")
+
+    wf = wave.open(req.strip(), 'rb')
     
     result = ''
     
@@ -14,3 +22,4 @@ def handle(audio_name):
         data = wf.readframes(CHUNK)
 
     return result
+
