@@ -119,10 +119,12 @@ def handle(req):
 
 
 if __name__ == "__main__":
-    os.environ["gateway_hostname"] = "192.168.0.111"
-    os.environ["Http_Query"] = "id=60a14a57dd64e7d93157e7c6&initial_ms=55000&final_ms=65000"
-    res = handle("")
+    # os.environ["gateway_hostname"] = "192.168.0.111"
+    # os.environ["Http_Query"] = "id=60a14a57dd64e7d93157e7c6&initial_ms=55000&final_ms=65000"
+    # res = handle("")
 
+    import requests
+    res = requests.get('http://192.168.0.111:8080/function/streaming?id=60a14a57dd64e7d93157e7c6&initial_ms=30000&final_ms=70000').text
 
     from pydub.playback import play
     base64_string = res
