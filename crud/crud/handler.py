@@ -55,12 +55,13 @@ def crud_music_to_dict(db_music):
     return res
 
 
-def crud_insert_update(name, author, song_base64):
+def crud_insert_update(name, author, part, song_bytes):
     collection = db_get_collection()
     music = {
         "name": name,
         "author": author,
-        "song_base64": song_base64
+        "part": part,
+        "song_bytes": song_bytes
     }
     res = collection.insert_one(music)
     return "Record inserted: {}".format(res.inserted_id)
@@ -105,8 +106,11 @@ def http_post(req):
     music = json.loads(req)
     name = music.get("name", "")
     author = music.get("author", "")
+    part = music.get("part", "")
     song_base64 = music.get("song_base64", "")
-    return crud_insert_update(name, author, song_base64)
+    song_bytes = song_base64.encode("ascii")
+    song_bytes = base64.b64decode(song_bytes)
+    return crud_insert_update(name, author, part, song_bytes)
 
 
 def http_get(req):
@@ -148,27 +152,33 @@ def handle(req):
         return err.message
 
 
+
+
+
+
+
 if __name__ == "__main__":
     # --------------
-    # Requisição GET
+    # Requisição GET (chamando diretamente a função)
     # --------------
     # os.environ["Http_Method"] = "GET"
     # os.environ["Http_Query"] = "id=60a11922c56144cd7d5b0d75"
     # res = handle("")
     # res = json.loads(res)
-    # # print(res)
+    # print(res)
 
-    # from pydub import AudioSegment
-    # from pydub.playback import play
-    # import io
 
-    # if "song_base64" in res:
-    #     base64_string = res["song_base64"]
-    #     base64_bytes = base64_string.encode("ascii")
-    #     sample_string_bytes = base64.b64decode(base64_bytes)
-    #     bytesio = io.BytesIO(sample_string_bytes)
-    #     song = AudioSegment.from_mp3(bytesio)
-    #     play(song)3
+    from pydub import AudioSegment
+    from pydub.playback import play
+    import io
+
+    if "song_base64" in res:
+        base64_string = res["song_base64"]
+        base64_bytes = base64_string.encode("ascii")
+        sample_string_bytes = base64.b64decode(base64_bytes)
+        bytesio = io.BytesIO(sample_string_bytes)
+        song = AudioSegment.from_mp3(bytesio)
+        play(song)
 
 
 
@@ -177,12 +187,20 @@ if __name__ == "__main__":
     # --------------
     # Requisição POST
     # --------------
-    os.environ["Http_Method"] = "POST"
-    bin_content = open('/home/gustavo/Downloads/teste.mp3', 'rb').read()
-    base64_bytes = base64.b64encode(bin_content)
-    base64_string = base64_bytes.decode("ascii")
-    req = '{"name":"Outro", "author":"Erasure", "song_base64": "' + base64_string + '"}'
+    # import glob
+    # files = glob.glob("/home/gustavo/Downloads/teste/songs/BachGavotteShort/*")
+    # for current in files:
+    #     os.environ["Http_Method"] = "POST"
+    #     bin_content = open(current, 'rb').read()
+    #     part = os.path.basename(current)
+    #     base64_bytes = base64.b64encode(bin_content)
+    #     base64_string = base64_bytes.decode("ascii")
+    #     req = '{"name":"BachGavotteShort", "part": "' + part + '", "author":"Erasure", "song_base64": "' + base64_string + '"}'
+    #     res = handle(req)
+    #     print(res)
 
-    res = handle(req)
-    print(res)
+
+    
+
+
 
