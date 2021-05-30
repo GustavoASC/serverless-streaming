@@ -141,14 +141,7 @@ def crud_delete(id):
 # Utilities
 # --------------------------------------------------------------
 
-def parse_http_path():
-    http_path = os.getenv('Http_Path')
-    http_path = http_path.split("/")
-    http_path = [string for string in http_path if string != ""]
-    return http_path
-
-def get_id_from_path():
-    http_path = os.getenv('Http_Path')
+def get_id_from_path(http_path):
     http_path = http_path.split("/")
     http_path = [string for string in http_path if string != ""]
     return http_path[0] if len(http_path) > 0 else None
@@ -158,9 +151,9 @@ def get_id_from_path():
 # HTTP methods implementation
 # --------------------------------------------------------------
 
-def http_post(req):
+def http_post(body):
 
-    music = json.loads(req)
+    music = json.loads(body)
 
     song_base64 = music.get("song_base64", "")
     song_bytes = song_base64.encode("ascii")
@@ -185,16 +178,16 @@ def http_post(req):
 
 
 
-def http_get(req):
-    id = get_id_from_path()
+def http_get(path):
+    id = get_id_from_path(path)
     if id is not None:
         return crud_find_pk(id)
     else:
         return crud_list()
 
-def http_delete(req):
+def http_delete(path):
     total_deleted = 0
-    id = get_id_from_path()
+    id = get_id_from_path(path)
     if id is not None:
        total_deleted = crud_delete(id)
     return "Total records deleted: {}".format(str(total_deleted))
@@ -203,23 +196,38 @@ def http_delete(req):
 # Function handler
 # --------------------------------------------------------------
 
-def handle(req):
+def handle(event, context):
     """handle a request to the function
     Args:
         req (str): request body
     """
 
     try:
-        method = os.getenv("Http_Method")
+        method = event.method
+        path = event.path
+        body = event.body
 
+        result = ""
         if method in ["POST", "PUT"]:
-            return http_post(req)
+            result = http_post(body)
         elif method == "GET":
-            return http_get(req)
+            result = http_get(path)
         elif method == "DELETE":
-            return http_delete(req)
+            result = http_delete(path)
         else:
-            return "Method: {} not supported".format(method)
+            result = "Method: {} not supported".format(method)
+
+
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-type": "text/plain; charset=utf-8",
+                "content-length": len(result),
+                "access-control-allow-origin": "*"
+            },
+            "body": result
+        }
+
 
     except Exception as err:
         return str(err)
@@ -244,12 +252,11 @@ if __name__ == "__main__":
     # --------------
     # Requisição POST
     # --------------
-    os.environ["Http_Method"] = "POST"
     bin_content = open('/home/gustavo/Downloads/teste/songs/SkyFullOfStars/SkyFullOfStars.mp3', 'rb').read()
     base64_bytes = base64.b64encode(bin_content)
     base64_string = base64_bytes.decode("ascii")
     req = '{"name":"Sky Full of Stars", "author":"Coldplay", "song_base64": "' + base64_string + '"}'
-    res = handle(req)
+    res = handle("", "")
     print(res)
 
 

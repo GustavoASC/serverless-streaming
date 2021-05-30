@@ -12,7 +12,8 @@ class MusicApi:
             # "song_base64": "abc"
         }
         json_payload = json.dumps(payload)
-        return requests.post(FUNCTION_URL, data=json_payload).text
+        res = requests.post(FUNCTION_URL, data=json_payload)
+        return res.text
 
     def remove(self, music_id):
         final_url = FUNCTION_URL + "/" + music_id
@@ -38,5 +39,11 @@ class MusicApi:
 
 if __name__ == "__main__":
 
-    res = MusicApi().insert("Teste", "Musica teste", '/home/gustavo/Downloads/Music.mp3')
+    res = MusicApi().insert("Madonna", "Like a Prayer", '/home/gustavo/Downloads/Like_A_Prayer.mp3')
+    print(res)
+    res = MusicApi().insert("Coldplay", "Sky Full of Stars", '/home/gustavo/Downloads/teste/songs/SkyFullOfStars/SkyFullOfStars.mp3')
+    print(res)
+    res = MusicApi().insert("Erasure", "A Little Respect", '/home/gustavo/Downloads/A_Little_Respect.mp3')
+    print(res)
+    res = MusicApi().insert("a-ha", "Take on me", '/home/gustavo/Downloads/TakeOnMe.mp3')
     print(res)
