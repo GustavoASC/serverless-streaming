@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from urllib.parse import quote_plus, parse_qsl
 
 DB_NAME = 'openfaas'
-DB_HOST_PORT = '192.168.0.110:27017'
+DB_HOST_PORT = '192.168.10.165:27017'
 
 # --------------------------------------------------------------
 #
@@ -15,7 +15,7 @@ DB_HOST_PORT = '192.168.0.110:27017'
 # Para iniciar o container do mongodb: docker run -d -p 27017:27017 -p 28017:28017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo
 #
 # Para tratar esses parâmetros deve manipular como JSON.
-# Exemplo com curl: curl -X POST --header "Content-Type: application/json" --data '{"name":"Teste", "author":"Alok"}' http://192.168.10.247:8080/function/crud
+# Exemplo com curl: curl -X POST --header "Content-Type: application/json" --data '{"name":"Teste", "author":"Alok"}' http://192.168.10.165:8080/function/crud
 # O que vem em 'req' fica {"name":"Teste", "author":"Alok"}
 #
 # --------------------------------------------------------------
@@ -50,7 +50,7 @@ def crud_music_to_dict(db_music):
         "id": str(db_music[u'_id']),
         "name": db_music[u'name'],
         "author": db_music[u'author'],
-        # "song_base64": db_music[u'song_base64']
+        "song_base64": db_music[u'song_base64']
     }
     return res
 
@@ -168,17 +168,17 @@ if __name__ == "__main__":
     # print(res)
 
 
-    from pydub import AudioSegment
-    from pydub.playback import play
-    import io
+    # from pydub import AudioSegment
+    # from pydub.playback import play
+    # import io
 
-    if "song_base64" in res:
-        base64_string = res["song_base64"]
-        base64_bytes = base64_string.encode("ascii")
-        sample_string_bytes = base64.b64decode(base64_bytes)
-        bytesio = io.BytesIO(sample_string_bytes)
-        song = AudioSegment.from_mp3(bytesio)
-        play(song)
+    # if "song_base64" in res:
+    #     base64_string = res["song_base64"]
+    #     base64_bytes = base64_string.encode("ascii")
+    #     sample_string_bytes = base64.b64decode(base64_bytes)
+    #     bytesio = io.BytesIO(sample_string_bytes)
+    #     song = AudioSegment.from_mp3(bytesio)
+    #     play(song)
 
 
 
@@ -187,17 +187,17 @@ if __name__ == "__main__":
     # --------------
     # Requisição POST
     # --------------
-    # import glob
-    # files = glob.glob("/home/gustavo/Downloads/teste/songs/BachGavotteShort/*")
-    # for current in files:
-    #     os.environ["Http_Method"] = "POST"
-    #     bin_content = open(current, 'rb').read()
-    #     part = os.path.basename(current)
-    #     base64_bytes = base64.b64encode(bin_content)
-    #     base64_string = base64_bytes.decode("ascii")
-    #     req = '{"name":"BachGavotteShort", "part": "' + part + '", "author":"Erasure", "song_base64": "' + base64_string + '"}'
-    #     res = handle(req)
-    #     print(res)
+    import glob
+    files = glob.glob("/home/gustavo/Downloads/teste/songs/BachGavotteShort/*")
+    for current in files:
+        os.environ["Http_Method"] = "POST"
+        bin_content = open(current, 'rb').read()
+        part = os.path.basename(current)
+        base64_bytes = base64.b64encode(bin_content)
+        base64_string = base64_bytes.decode("ascii")
+        req = '{"name":"BachGavotteShort", "part": "' + part + '", "author":"Erasure", "song_base64": "' + base64_string + '"}'
+        res = handle(req)
+        print(res)
 
 
     

@@ -1,13 +1,13 @@
 version: 1.0
 provider:
   name: openfaas
-  gateway: http://192.168.0.111:8080
+  gateway: http://192.168.10.247:8080
 functions:
   crud:
     lang: python3-debian
     handler: ./crud
     image: gustavoasc/crud:latest
     environment:
-      mongo_host: 192.168.0.110:27017
+      mongo_host: 192.168.10.165:27017
       write_debug: true
       combine_output: false

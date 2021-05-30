@@ -13,7 +13,7 @@ from urllib.parse import quote_plus
 
 
 DB_NAME = 'openfaas'
-DB_HOST_PORT = '192.168.0.110:27017'
+DB_HOST_PORT = '192.168.10.165:27017'
 
 # --------------------------------------------------------------
 # Database methods
@@ -58,17 +58,17 @@ def handle(event, context):
         req (str): request body
     """
 
-    http_path = event.path.split("/")
+    http_path = event.path
+    http_path = http_path.split("/")
     http_path = [string for string in http_path if string != ""]
     music_name = http_path[0]
     music_part = http_path[1]
 
     song_bytes = crud_find_song_bytes(music_name, music_part)
-    song_bytes = bytes(song_bytes)
     return {
         "statusCode": 200,
         "headers": {
-            "content-type": detect_content_type(music_part),
+            "Content-type": detect_content_type(music_part),
             "content-length": len(song_bytes),
             "access-control-allow-origin": "*"
         },
@@ -79,7 +79,6 @@ def handle(event, context):
 if __name__ == "__main__":
     
     os.environ["gateway_hostname"] = "192.168.0.111"
-    os.environ["Http_Path"] = "/BachGavotteShort/output019.ts"
     res = handle("", "")
 
     # import requests
@@ -93,5 +92,6 @@ if __name__ == "__main__":
     # bytesio = io.BytesIO(music_bytes)
     # song = AudioSegment.from_mp3(bytesio)
     # play(song)
-    # print(res)
+    text_result = res["body"]
+    print(text_result)
     
