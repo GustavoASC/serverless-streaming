@@ -11,7 +11,6 @@ from urllib.parse import quote_plus
 # faas-cli up -f streaming.yml --build-arg ADDITIONAL_PACKAGE=ffmpeg
 # --------------------------------------------------------------
 
-
 DB_NAME = 'openfaas'
 DB_HOST_PORT = '192.168.10.165:27017'
 
@@ -32,21 +31,16 @@ def db_get_mongo_client():
 def db_get_collection():
     client = db_get_mongo_client()
     db = client[DB_NAME]
-    return db.musics
+    return db.chunks
 
 # --------------------------------------------------------------
 # CRUD methods interacting with database
 # --------------------------------------------------------------
 
-def crud_find_song_bytes(music_name, music_part):
+def crud_find_song_bytes(music_id, chunk_name):
     collection = db_get_collection()
-    db_music = collection.find_one({"name": music_name, "part": music_part})
-    return db_music[u'song_bytes']
-
-
-def detect_content_type(music_part):
-    return "application/octet-stream"
-
+    db_music = collection.find_one({"music_id": music_id, "chunk_name": chunk_name})
+    return db_music[u'chunk_bytes']
 
 # --------------------------------------------------------------
 # Function handler
@@ -57,41 +51,29 @@ def handle(event, context):
     Args:
         req (str): request body
     """
+    try:
+        http_path = event.path
+        http_path = http_path.split("/")
+        http_path = [string for string in http_path if string != ""]
+        music_id = http_path[0]
+        chunk_name = http_path[1]
 
-    http_path = event.path
-    http_path = http_path.split("/")
-    http_path = [string for string in http_path if string != ""]
-    music_name = http_path[0]
-    music_part = http_path[1]
-
-    song_bytes = crud_find_song_bytes(music_name, music_part)
-    return {
-        "statusCode": 200,
-        "headers": {
-            "Content-type": detect_content_type(music_part),
-            "content-length": len(song_bytes),
-            "access-control-allow-origin": "*"
-        },
-        "body": song_bytes
-    }
+        song_bytes = crud_find_song_bytes(music_id, chunk_name)
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-type": "application/octet-stream",
+                "content-length": len(song_bytes),
+                "access-control-allow-origin": "*"
+            },
+            "body": song_bytes
+        }
+    except Exception as err:
+        return str(err)
 
 
 if __name__ == "__main__":
     
-    os.environ["gateway_hostname"] = "192.168.0.111"
     res = handle("", "")
-
-    # import requests
-    # res = requests.get('http://192.168.0.111:8080/function/streaming?id=60a14a57dd64e7d93157e7c6&initial_ms=30000&final_ms=70000').text
-
-    # from pydub.playback import play
-    # base64_string = res
-    # base64_bytes = base64_string.encode("ascii")
-    # music_bytes = base64.b64decode(base64_bytes)
-    # music_bytes = res
-    # bytesio = io.BytesIO(music_bytes)
-    # song = AudioSegment.from_mp3(bytesio)
-    # play(song)
     text_result = res["body"]
     print(text_result)
-    
