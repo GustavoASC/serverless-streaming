@@ -9,11 +9,9 @@ class MusicApi:
             "author": author,
             "name": music_name,
             "song_base64": self._load_song_base64(song_path)
-            # "song_base64": "abc"
         }
         json_payload = json.dumps(payload)
-        res = requests.post(FUNCTION_URL, data=json_payload)
-        return res.text
+        return requests.post(FUNCTION_URL, data=json_payload).text
 
     def remove(self, music_id):
         final_url = FUNCTION_URL + "/" + music_id
@@ -25,8 +23,6 @@ class MusicApi:
 
     def list(self):
         return requests.get(FUNCTION_URL).text
-
-    ### Utility methods
 
     def _load_song_base64(self, song_path):
         song_binary_content = open(song_path, 'rb').read()
