@@ -39,11 +39,34 @@ class MusicApi:
 
 if __name__ == "__main__":
 
-    res = MusicApi().insert("Madonna", "Like a Prayer", '/home/gustavo/Downloads/Like_A_Prayer.mp3')
-    print(res)
-    res = MusicApi().insert("Coldplay", "Sky Full of Stars", '/home/gustavo/Downloads/teste/songs/SkyFullOfStars/SkyFullOfStars.mp3')
-    print(res)
-    res = MusicApi().insert("Erasure", "A Little Respect", '/home/gustavo/Downloads/A_Little_Respect.mp3')
-    print(res)
-    res = MusicApi().insert("a-ha", "Take on me", '/home/gustavo/Downloads/TakeOnMe.mp3')
-    print(res)
+    import json
+
+    api = MusicApi()
+
+    print("Adding musics...")
+    print(api.insert("Madonna", "Like a Prayer", '/home/gustavo/Downloads/Like_A_Prayer.mp3'))
+    print(api.insert("Coldplay", "Sky Full of Stars", '/home/gustavo/Downloads/teste/songs/SkyFullOfStars/SkyFullOfStars.mp3'))
+    print(api.insert("Erasure", "A Little Respect", '/home/gustavo/Downloads/A_Little_Respect.mp3'))
+    print(api.insert("a-ha", "Take on me", '/home/gustavo/Downloads/TakeOnMe.mp3'))
+
+    print()
+    print("Listing musics...")
+    all_musics = json.loads(api.list())
+    for music in all_musics:
+        print(music)
+
+    print()
+    print("Printing specific music data...")
+    for music in all_musics:
+        print(api.get(music["id"]))
+
+    print()
+    print("Printing data which does not exist...")
+    print(api.get("11111"))
+    print(api.get("22222"))
+    print(api.get("33333"))
+
+    print()
+    print("Deleting musics...")
+    for music in all_musics:
+        print(api.remove(music["id"]))

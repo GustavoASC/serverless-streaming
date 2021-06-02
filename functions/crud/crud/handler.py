@@ -1,13 +1,8 @@
-import os
 import json
 import base64
-from types import TracebackType
 from pymongo import MongoClient
 from bson.objectid import ObjectId, InvalidId
 from urllib.parse import quote_plus
-
-DB_NAME = 'openfaas'
-DB_HOST_PORT = '192.168.10.165:27017'
 
 # --------------------------------------------------------------
 #
@@ -57,85 +52,89 @@ class MusicSplitter:
         return all_chunks
 
 
-
-
 # --------------------------------------------------------------
 # Database methods
 # --------------------------------------------------------------
+DB_NAME = 'openfaas'
+DB_HOST_PORT = '192.168.10.165:27017'
 
-def db_get_uri():
-    host = DB_HOST_PORT
-    password = "admin"
-    username = "admin"
-    return "mongodb://%s:%s@%s" % (quote_plus(username), quote_plus(password), host)
+class Database:
 
+    def _get_uri(self):
+        host = DB_HOST_PORT
+        password = "admin"
+        username = "admin"
+        return "mongodb://%s:%s@%s" % (quote_plus(username), quote_plus(password), host)
 
-def db_get_mongo_client():
-    uri = db_get_uri()
-    return MongoClient(uri)
+    def _get_mongo_client(self):
+        uri = self._get_uri()
+        return MongoClient(uri)
 
-def db_get_musics_collection():
-    client = db_get_mongo_client()
-    db = client[DB_NAME]
-    return db.musics
+    def get_musics_collection(self):
+        client = self._get_mongo_client()
+        db = client[DB_NAME]
+        return db.musics
 
-def db_get_chunks_collection():
-    client = db_get_mongo_client()
-    db = client[DB_NAME]
-    return db.chunks
+    def get_chunks_collection(self):
+        client = self._get_mongo_client()
+        db = client[DB_NAME]
+        return db.chunks
 
 # --------------------------------------------------------------
 # CRUD methods interacting with database
 # --------------------------------------------------------------
 
-def crud_music_to_dict(db_music):
-    res = {
-        "id": str(db_music[u'_id']),
-        "name": db_music[u'name'],
-        "author": db_music[u'author']
-    }
-    return res
+class Crud:
+
+    def __init__(self, db):
+        self.db = db
+
+    def _music_to_dict(self, db_music):
+        res = {
+            "id": str(db_music[u'_id']),
+            "name": db_music[u'name'],
+            "author": db_music[u'author']
+        }
+        return res
+
+    def insert_update(self, name, author):
+        collection = self.db.get_musics_collection()
+        music = {
+            "name": name,
+            "author": author
+        }
+        res = collection.insert_one(music)
+        return res.inserted_id
 
 
-def crud_insert_update(name, author):
-    collection = db_get_musics_collection()
-    music = {
-        "name": name,
-        "author": author
-    }
-    res = collection.insert_one(music)
-    return res.inserted_id
-
-
-def crud_find_pk(id):
-    collection = db_get_musics_collection()
-    try:
-        db_music = collection.find_one({"_id": ObjectId(id)})
-        if db_music is not None:
-            dict_music = crud_music_to_dict(db_music)
-            return json.dumps(dict_music)
-        else:
+    def find_pk(self, id):
+        collection = self.db.get_musics_collection()
+        try:
+            db_music = collection.find_one({"_id": ObjectId(id)})
+            if db_music is not None:
+                dict_music = self._music_to_dict(db_music)
+                return json.dumps(dict_music)
+            else:
+                return "{}"
+        except InvalidId:
             return "{}"
-    except InvalidId:
-        return "{}"
+
+    def list(self):
+        collection = self.db.get_musics_collection()
+        ret = []
+        for db_music in collection.find():
+            music = self._music_to_dict(db_music)
+            ret.append(music)
+        return json.dumps(ret)
 
 
-def crud_list():
-    collection = db_get_musics_collection()
-    ret = []
-    for db_music in collection.find():
-        music = crud_music_to_dict(db_music)
-        ret.append(music)
-    return json.dumps(ret)
-
-
-def crud_delete(id):
-    collection = db_get_musics_collection()
-    try:
-        res = collection.delete_one({"_id": ObjectId(id)})
-        return res.deleted_count
-    except:
-        return 0
+    def delete(self, id):
+        collection = self.db.get_musics_collection()
+        try:
+            res = collection.delete_one({"_id": ObjectId(id)})
+            return res.deleted_count
+        except:
+            return 0
 
 # --------------------------------------------------------------
 # Utilities
@@ -151,72 +150,72 @@ def get_id_from_path(http_path):
 # HTTP methods implementation
 # --------------------------------------------------------------
 
-def http_post(body):
+class HttpImpl:
 
-    music = json.loads(body)
+    def __init__(self, path, body):
+        self.path = path
+        self.body = body
+        self.db = Database()
+        self.crud = Crud(self.db)
 
-    song_base64 = music.get("song_base64", "")
-    song_bytes = song_base64.encode("ascii")
-    song_bytes = base64.b64decode(song_bytes)
-    music_chunks = MusicSplitter().split(song_bytes)
+    def post(self):
 
+        music = json.loads(self.body)
 
-    name = music.get("name", "")
-    author = music.get("author", "")
-    id = crud_insert_update(name, author)
-
-    chunks_collection = db_get_chunks_collection()
-    for key in music_chunks:
-        chunk = {
-            "music_id": str(id),
-            "chunk_name": key,
-            "chunk_bytes": music_chunks[key]
-        }
-        chunks_collection.insert_one(chunk)
-        
-    return "Record inserted: {}".format(id)
+        song_base64 = music.get("song_base64", "")
+        song_bytes = song_base64.encode("ascii")
+        song_bytes = base64.b64decode(song_bytes)
+        music_chunks = MusicSplitter().split(song_bytes)
 
 
+        name = music.get("name", "")
+        author = music.get("author", "")
+        id = self.crud.insert_update(name, author)
 
-def http_get(path):
-    id = get_id_from_path(path)
-    if id is not None:
-        return crud_find_pk(id)
-    else:
-        return crud_list()
+        chunks_collection = self.db.get_chunks_collection()
+        for key in music_chunks:
+            chunk = {
+                "music_id": str(id),
+                "chunk_name": key,
+                "chunk_bytes": music_chunks[key]
+            }
+            chunks_collection.insert_one(chunk)
+            
+        return "Record inserted: {}".format(id)
 
-def http_delete(path):
-    total_deleted = 0
-    id = get_id_from_path(path)
-    if id is not None:
-       total_deleted = crud_delete(id)
-    return "Total records deleted: {}".format(str(total_deleted))
+    def get(self):
+        id = get_id_from_path(self.path)
+        if id is not None:
+            return self.crud.find_pk(id)
+        else:
+            return self.crud.list()
+
+    def delete(self):
+        total_deleted = 0
+        id = get_id_from_path(self.path)
+        if id is not None:
+            total_deleted = self.crud.delete(id)
+        return "Total records deleted: {}".format(str(total_deleted))
 
 # --------------------------------------------------------------
 # Function handler
 # --------------------------------------------------------------
 
 def handle(event, context):
-    """handle a request to the function
-    Args:
-        req (str): request body
-    """
-
     try:
-        method = event.method
-        path = event.path
-        body = event.body
 
+        method = event.method
+        http = HttpImpl(event.path, event.body)
+        
         result = ""
-        if method in ["POST", "PUT"]:
-            result = http_post(body)
+        if method == "POST":
+            result = http.post()
         elif method == "GET":
-            result = http_get(path)
+            result = http.get()
         elif method == "DELETE":
-            result = http_delete(path)
+            result = http.delete()
         else:
             result = "Method: {} not supported".format(method)
-
 
         return {
             "statusCode": 200,
@@ -228,14 +227,8 @@ def handle(event, context):
             "body": result
         }
 
-
     except Exception as err:
         return str(err)
-
-
-
-
-
 
 
 
