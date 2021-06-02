@@ -31,7 +31,8 @@ from glob import glob
 
 MP3_FILENAME = 'music.mp3'
 PROCESS_NAME = 'ffmpeg'
-FULL_COMMAND = PROCESS_NAME + ' -i ' + MP3_FILENAME + ' -c:a libmp3lame -b:a 128k -map 0:0 -f segment -segment_time 10 -segment_list outputlist.m3u8 -segment_format mpegts output%03d.ts'
+EXTRA_PARAMS = ' -c:a libmp3lame -b:a 128k -map 0:0 -f segment -segment_time 10 -segment_list outputlist.m3u8 -segment_format mpegts output%03d.ts'
+FULL_COMMAND = PROCESS_NAME + ' -i ' + MP3_FILENAME + EXTRA_PARAMS
 
 class MusicSplitter:
 
@@ -41,7 +42,9 @@ class MusicSplitter:
             file.write(binary_full_song)
         
         subprocess.run(FULL_COMMAND.split())
+        return self.read_chunks()
 
+    def read_chunks(self):
         all_chunks = {}
         files = glob("*.m3u8") + glob("*.ts")
         for current_filename in files:
@@ -83,7 +86,6 @@ class Database:
 # --------------------------------------------------------------
 # CRUD methods interacting with database
 # --------------------------------------------------------------
-
 class Crud:
 
     def __init__(self, db):

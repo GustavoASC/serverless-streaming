@@ -66,3 +66,10 @@ if __name__ == "__main__":
     print("Deleting musics...")
     for music in all_musics:
         print(api.remove(music["id"]))
+
+    print()
+    print("Listing musics...")
+    all_musics = json.loads(api.list())
+    for music in all_musics:
+        print(music)
+
