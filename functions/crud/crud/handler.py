@@ -86,10 +86,35 @@ class Database:
 # --------------------------------------------------------------
 # CRUD methods interacting with database
 # --------------------------------------------------------------
-class Crud:
+class ChunksPersistence:
+
+    def __init__(self, db):
+        self.chunks_col = db.get_chunks_collection()
+
+    def _split_music_chunks(self, song_base64):
+        song_bytes = song_base64.encode("ascii")
+        song_bytes = base64.b64decode(song_bytes)
+        return MusicSplitter().split(song_bytes)
+
+    def insert_song_chunks(self, music_id, song_base64):
+        chunks = self._split_music_chunks(song_base64)
+        for key in chunks:
+            chunk = {
+                "music_id": str(music_id),
+                "chunk_name": key,
+                "chunk_bytes": chunks[key]
+            }
+            self.chunks_col.insert_one(chunk)
+
+    def delete_song_chunks(self, music_id):
+        self.chunks_col.delete_many({"music_id": music_id})
+
+
+class MusicCrud:
 
     def __init__(self):
         self.db = Database()
+        self.musics_col = self.db.get_musics_collection()
 
     def _music_to_dict(self, db_music):
         res = {
@@ -99,57 +124,36 @@ class Crud:
         }
         return res
 
-    def _split_music_chunks(self, song_base64):
-        song_bytes = song_base64.encode("ascii")
-        song_bytes = base64.b64decode(song_bytes)
-        return MusicSplitter().split(song_bytes)
-
-    def _insert_song_chunks(self, music_id, song_base64):
-        collection = self.db.get_chunks_collection()
-        chunks = self._split_music_chunks(song_base64)
-        for key in chunks:
-            chunk = {
-                "music_id": str(music_id),
-                "chunk_name": key,
-                "chunk_bytes": chunks[key]
-            }
-            collection.insert_one(chunk)
-        
     def insert_update(self, name, author, song_base64):
         music = {
             "name": name,
             "author": author
         }
-        collection = self.db.get_musics_collection()
-        music_id = collection.insert_one(music).inserted_id
-        self._insert_song_chunks(music_id, song_base64)
+        music_id = self.musics_col.insert_one(music).inserted_id
+        ChunksPersistence(self.db).insert_song_chunks(music_id, song_base64)
         return music_id
 
-    def find_pk(self, id):
-        collection = self.db.get_musics_collection()
+    def find_pk(self, music_id):
         try:
-            db_music = collection.find_one({"_id": ObjectId(id)})
-            if db_music is not None:
-                dict_music = self._music_to_dict(db_music)
-                return json.dumps(dict_music)
-            else:
+            music = self.musics_col.find_one({"_id": ObjectId(music_id)})
+            if music is None:
                 return "{}"
+            else:
+                return json.dumps(self._music_to_dict(music))
         except InvalidId:
             return "{}"
 
     def list(self):
-        collection = self.db.get_musics_collection()
         ret = []
-        for db_music in collection.find():
+        for db_music in self.musics_col.find():
             music = self._music_to_dict(db_music)
             ret.append(music)
         return json.dumps(ret)
 
-
-    def delete(self, id):
-        collection = self.db.get_musics_collection()
+    def delete(self, music_id):
         try:
-            res = collection.delete_one({"_id": ObjectId(id)})
+            res = self.musics_col.delete_one({"_id": ObjectId(music_id)})
+            ChunksPersistence(self.db).delete_song_chunks(music_id)
             return res.deleted_count
         except:
             return 0
@@ -173,7 +177,7 @@ class HttpImpl:
     def __init__(self, path, body):
         self.path = path
         self.body = body
-        self.crud = Crud()
+        self.crud = MusicCrud()
 
     def post(self):
         music = json.loads(self.body)
