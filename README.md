@@ -20,8 +20,8 @@ An Application Programming Interface (API) developed in Python was also provided
     api = MusicApi()
 
     print("Adding musics...")
-    print(api.insert("Madonna", "Like a Prayer", '/home/gustavo/Like_A_Prayer.mp3'))
-    print(api.insert("Coldplay", "Sky Full of Stars", '/home/gustavo/SkyFullOfStars.mp3'))
+    print(api.insert("Madonna", "Like a Prayer", '/home/Like_A_Prayer.mp3'))
+    print(api.insert("Coldplay", "Sky Full of Stars", '/home/SkyFullOfStars.mp3'))
     print(api.insert("Erasure", "A Little Respect", '/home/A_Little_Respect.mp3'))
     print(api.insert("a-ha", "Take on me", '/home/TakeOnMe.mp3'))
 
@@ -71,4 +71,3 @@ In order to deploy the CRUD function:
 The following command is used to start a MongoDB container:
 
     docker run -d -p 27017:27017 -p 28017:28017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo
-    
