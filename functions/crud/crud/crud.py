@@ -1,3 +1,6 @@
+# --------------------------------------------------------------
+# CRUD operations
+# --------------------------------------------------------------
 from .db import Database
 from .chunk import ChunksPersistence
 from bson.objectid import ObjectId, InvalidId

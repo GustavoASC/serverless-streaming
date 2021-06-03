@@ -1,15 +1,5 @@
-import os
 from pymongo import MongoClient
 from urllib.parse import quote_plus
-
-# --------------------------------------------------------------
-# Para fazer o deploy desta função é necessário instalar o ffmpeg no Linux.
-# Não é a biblioteca do Python, é no Linux mesmo.
-#
-# Para isso usar a command-line abaixo:
-#
-# faas-cli up -f streaming.yml --build-arg ADDITIONAL_PACKAGE=ffmpeg
-# --------------------------------------------------------------
 
 DB_NAME = 'openfaas'
 DB_HOST_PORT = '192.168.10.165:27017'
@@ -47,10 +37,6 @@ def crud_find_song_bytes(music_id, chunk_name):
 # --------------------------------------------------------------
 
 def handle(event, context):
-    """handle a request to the function
-    Args:
-        req (str): request body
-    """
     try:
         http_path = event.path
         http_path = http_path.split("/")

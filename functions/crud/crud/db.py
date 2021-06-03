@@ -1,7 +1,6 @@
 # --------------------------------------------------------------
-# Database methods
+# Database operations
 # --------------------------------------------------------------
-
 from pymongo import MongoClient
 from urllib.parse import quote_plus
 

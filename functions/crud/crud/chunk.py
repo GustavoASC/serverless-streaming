@@ -1,7 +1,6 @@
 # --------------------------------------------------------------
 # CRUD methods interacting with database
 # --------------------------------------------------------------
-
 import base64
 from .split import MusicSplitter
 

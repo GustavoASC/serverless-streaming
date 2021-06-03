@@ -1,7 +1,6 @@
 ## ------------------------------------
 ## Class to split song into multiple chunks
 ## ------------------------------------
-
 import subprocess
 from glob import glob
 
@@ -9,7 +8,6 @@ MP3_FILENAME = 'music.mp3'
 PROCESS_NAME = 'ffmpeg'
 EXTRA_PARAMS = ' -c:a libmp3lame -b:a 128k -map 0:0 -f segment -segment_time 10 -segment_list outputlist.m3u8 -segment_format mpegts output%03d.ts'
 FULL_COMMAND = PROCESS_NAME + ' -i ' + MP3_FILENAME + EXTRA_PARAMS
-
 
 class MusicSplitter:
 
