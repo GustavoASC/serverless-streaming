@@ -88,8 +88,8 @@ class Database:
 # --------------------------------------------------------------
 class Crud:
 
-    def __init__(self, db):
-        self.db = db
+    def __init__(self):
+        self.db = Database()
 
     def _music_to_dict(self, db_music):
         res = {
@@ -99,15 +99,31 @@ class Crud:
         }
         return res
 
-    def insert_update(self, name, author):
-        collection = self.db.get_musics_collection()
+    def _split_music_chunks(self, song_base64):
+        song_bytes = song_base64.encode("ascii")
+        song_bytes = base64.b64decode(song_bytes)
+        return MusicSplitter().split(song_bytes)
+
+    def _insert_song_chunks(self, music_id, song_base64):
+        collection = self.db.get_chunks_collection()
+        chunks = self._split_music_chunks(song_base64)
+        for key in chunks:
+            chunk = {
+                "music_id": str(music_id),
+                "chunk_name": key,
+                "chunk_bytes": chunks[key]
+            }
+            collection.insert_one(chunk)
+        
+    def insert_update(self, name, author, song_base64):
         music = {
             "name": name,
             "author": author
         }
-        res = collection.insert_one(music)
-        return res.inserted_id
-
+        collection = self.db.get_musics_collection()
+        music_id = collection.insert_one(music).inserted_id
+        self._insert_song_chunks(music_id, song_base64)
+        return music_id
 
     def find_pk(self, id):
         collection = self.db.get_musics_collection()
@@ -157,33 +173,13 @@ class HttpImpl:
     def __init__(self, path, body):
         self.path = path
         self.body = body
-        self.db = Database()
-        self.crud = Crud(self.db)
-
-    def _split_music_chunks(self, song_base64):
-        song_bytes = song_base64.encode("ascii")
-        song_bytes = base64.b64decode(song_bytes)
-        return MusicSplitter().split(song_bytes)
-
+        self.crud = Crud()
 
     def post(self):
-
         music = json.loads(self.body)
-
-        chunks = self._split_music_chunks(music.get("song_base64", ""))
-        name = music.get("name", "")
-        author = music.get("author", "")
-        id = self.crud.insert_update(name, author)
-
-        chunks_collection = self.db.get_chunks_collection()
-        for key in chunks:
-            chunk = {
-                "music_id": str(id),
-                "chunk_name": key,
-                "chunk_bytes": chunks[key]
-            }
-            chunks_collection.insert_one(chunk)
-            
+        id = self.crud.insert_update(music.get("name", ""),
+                                     music.get("author", ""),
+                                     music.get("song_base64", ""))
         return "Record inserted: {}".format(id)
 
     def get(self):
