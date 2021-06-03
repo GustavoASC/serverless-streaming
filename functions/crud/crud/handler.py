@@ -42,15 +42,18 @@ class MusicSplitter:
             file.write(binary_full_song)
         
         subprocess.run(FULL_COMMAND.split())
-        return self.read_chunks()
+        return self._read_all_chunks()
 
-    def read_chunks(self):
+    def _read_chunk_bytes(self, chunk_name):
+        with open(chunk_name, 'rb') as chunk:
+            current_bytes = chunk.read()
+            return current_bytes
+
+    def _read_all_chunks(self):
         all_chunks = {}
         files = glob("*.m3u8") + glob("*.ts")
         for current_filename in files:
-            with open(current_filename, 'rb') as chunk:
-                current_bytes = chunk.read()
-                all_chunks[current_filename] = current_bytes
+            all_chunks[current_filename] = self._read_chunk_bytes(current_filename)
 
         return all_chunks
 
