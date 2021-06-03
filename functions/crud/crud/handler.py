@@ -16,8 +16,7 @@
 # --------------------------------------------------------------
 # Function handler
 # --------------------------------------------------------------
-from .HttpImpl import HttpImpl
-import base64
+from .httpimpl import HttpImpl
 
 def handle(event, context):
     try:
@@ -51,23 +50,5 @@ def handle(event, context):
 
 
 if __name__ == "__main__":
-    # --------------
-    # Requisição GET (chamando diretamente a função)
-    # --------------
-    # os.environ["Http_Method"] = "DELETE"
-    # os.environ["Http_Path"] = "/60b3914bd78ebfe0fe29ae51"
-    # res = handle("")
-    # res = json.loads(res)
-    # print(res)
-
-    # --------------
-    # Requisição POST
-    # --------------
-    bin_content = open('/home/gustavo/Downloads/teste/songs/SkyFullOfStars/SkyFullOfStars.mp3', 'rb').read()
-    base64_bytes = base64.b64encode(bin_content)
-    base64_string = base64_bytes.decode("ascii")
-    req = '{"name":"Sky Full of Stars", "author":"Coldplay", "song_base64": "' + base64_string + '"}'
-    res = handle("", "")
-    print(res)
-
+    print(handle("", ""))
 

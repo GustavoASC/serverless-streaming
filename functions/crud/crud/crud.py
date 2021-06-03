@@ -1,5 +1,5 @@
-from .Database import Database
-from .ChunksPersistence import ChunksPersistence
+from .db import Database
+from .chunk import ChunksPersistence
 from bson.objectid import ObjectId, InvalidId
 import json
 

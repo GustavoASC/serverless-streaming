@@ -3,7 +3,7 @@
 # --------------------------------------------------------------
 
 import json
-from .MusicCrud import MusicCrud
+from .crud import MusicCrud
 
 class HttpImpl:
 

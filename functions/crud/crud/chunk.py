@@ -3,7 +3,7 @@
 # --------------------------------------------------------------
 
 import base64
-from .MusicSplitter import MusicSplitter
+from .split import MusicSplitter
 
 class ChunksPersistence:
 
