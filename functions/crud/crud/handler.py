@@ -160,26 +160,27 @@ class HttpImpl:
         self.db = Database()
         self.crud = Crud(self.db)
 
+    def _split_music_chunks(self, song_base64):
+        song_bytes = song_base64.encode("ascii")
+        song_bytes = base64.b64decode(song_bytes)
+        return MusicSplitter().split(song_bytes)
+
+
     def post(self):
 
         music = json.loads(self.body)
 
-        song_base64 = music.get("song_base64", "")
-        song_bytes = song_base64.encode("ascii")
-        song_bytes = base64.b64decode(song_bytes)
-        music_chunks = MusicSplitter().split(song_bytes)
-
-
+        chunks = self._split_music_chunks(music.get("song_base64", ""))
         name = music.get("name", "")
         author = music.get("author", "")
         id = self.crud.insert_update(name, author)
 
         chunks_collection = self.db.get_chunks_collection()
-        for key in music_chunks:
+        for key in chunks:
             chunk = {
                 "music_id": str(id),
                 "chunk_name": key,
-                "chunk_bytes": music_chunks[key]
+                "chunk_bytes": chunks[key]
             }
             chunks_collection.insert_one(chunk)
             
